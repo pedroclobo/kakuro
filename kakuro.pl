@@ -155,6 +155,19 @@ disjuntas([P|_], Lst2) :-
 disjuntas([_|R], Lst2) :- disjuntas(R, Lst2).
 
 
+% permutacoes_soma_espacos(Espacos, Perms_soma)
+/* em que Espacos eh uma lista de espacos, significa que Perms_soma eh a lista
+ * de listas de 2 elementos, em que o 1o elemento eh um espaco de Espacos e o
+ * 2o eh a lista ordenada de permutacoes cuja soma eh igual a soma do espaco */
+permutacoes_soma_espacos(Espacos, Perms_soma) :-
+	bagof(Perm_soma, permutacoes_soma_espacos_aux(Espacos, Perm_soma), Perms_soma).
+
+permutacoes_soma_espacos_aux(Espacos, Perm_soma) :-
+	member(Esp, Espacos), Esp = espaco(Soma, Vars), length(Vars, L),
+	permutacoes_soma(L, [1,2,3,4,5,6,7,8,9], Soma, Perms),
+	Perm_soma = [Esp, Perms].
+
+
 % numeros_comuns(Lst_Perms, Numeros_comuns)
 /* Lst_Perms eh uma lista de permutacoes e Numeros_comuns eh uma lista de pares
  * (pos, numero), em que as listas de Lst_Perms contem numero na posicao pos. */
