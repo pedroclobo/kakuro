@@ -97,6 +97,64 @@ agrupa_fila_aux(Fila, Fila_S, Ints) :-
 espacos_fila(H_V, Fila, Espacos) :-
 	bagof(Esp, espaco_fila(Fila, Esp, H_V), Espacos).
 
+
+% espacos_puzzle(Puzzle, Espacos)
+/* em que Puzzle eh um puzzle, significa que Espacos eh a lista de espacos de
+ * Puzzle */
+espacos_puzzle(Puzzle, Espacos) :-
+
+	% Obter espacos do puzzle
+	bagof(Esps, espacos_puzzle_aux('h', Puzzle, Esps), Espacos1),
+	mat_transposta(Puzzle, Transp),
+	bagof(Esps, espacos_puzzle_aux('v', Transp, Esps), Espacos2),
+
+	% Junta os espacos numa so lista
+	append(Espacos1, Espacos2, Temp),
+	append(Temp, Espacos).
+
+espacos_puzzle_aux(H_V, Puzzle, Esps) :-
+
+	% Descobre todos os espacos do puzzle
+	member(Fila, Puzzle),
+	espacos_fila(H_V, Fila, Esps).
+
+
+% espacos_com_posicoes_comuns(Espacos, Esp, Esps_com)
+/* em que Espacos eh uma lista de espacos e Esp eh um espaco, significa que
+ * Esps_com eh a lista de espacos com variaveis em comum com Esp, exceptuando Esp */
+espacos_com_posicoes_comuns(Espacos, Esp, Esps_com) :-
+	bagof(Esp_com, espacos_com_posicoes_comuns_aux(Espacos, Esp, Esp_com), Esps_com).
+
+espacos_com_posicoes_comuns_aux(Espacos, Esp, Esp_com) :-
+	member(M, Espacos),
+	eh_espacos_com_posicoes_comuns(Esp, M),
+	Esp_com = M.
+
+
+% eh_espacos_com_posicoes_comuns(Esp1, Esp2)
+/* em que Esp1 e Esp2 sao dois espacos distintos com posicoes comuns */
+eh_espacos_com_posicoes_comuns(espaco(N1, Vars1), espaco(N2, Vars2)) :-
+	espaco(N1, Vars2) \== espaco(N2, Vars2),
+	\+disjuntas(Vars1, Vars2).
+
+
+% membro(El, Lst)
+/* em que El eh uma elemento e Lst eh uma lista,
+ * equivalente ao predicado member, porem sem a unificacao */
+membro(El, [P|_]) :- El == P.
+membro(El, [_|R]) :- membro(El, R).
+
+
+% disjuntas(Lst1, Lst2)
+/* em que Lst1 e Lst2 sao duas listas disjuntas */
+disjuntas([], _) :- !.
+disjuntas(_, []) :- !.
+disjuntas([P|_], Lst2) :-
+	membro(P, Lst2),
+	!, fail.
+disjuntas([_|R], Lst2) :- disjuntas(R, Lst2).
+
+
 % numeros_comuns(Lst_Perms, Numeros_comuns)
 /* Lst_Perms eh uma lista de permutacoes e Numeros_comuns eh uma lista de pares
  * (pos, numero), em que as listas de Lst_Perms contem numero na posicao pos. */
