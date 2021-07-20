@@ -1,6 +1,7 @@
 % Pedro Lobo - ist199115
 
 :- [codigo_comum].
+:- [puzzles_publicos].
 
 % combinacoes_soma(N, Els, Soma, Combs)
 /* Combs eh a lista ordenada cujos elementos sao as combinacoes N a N, dos
@@ -141,8 +142,9 @@ eh_espacos_com_posicoes_comuns(espaco(N1, Vars1), espaco(N2, Vars2)) :-
 % membro(El, Lst)
 /* em que El eh uma elemento e Lst eh uma lista,
  * equivalente ao predicado member, porem sem a unificacao */
-membro(El, [P|_]) :- El == P.
-membro(El, [_|R]) :- membro(El, R).
+membro(El, [P|R]) :-
+	El == P;
+	membro(El, R).
 
 
 % disjuntas(Lst1, Lst2)
@@ -166,6 +168,63 @@ permutacoes_soma_espacos_aux(Espacos, Perm_soma) :-
 	member(Esp, Espacos), Esp = espaco(Soma, Vars), length(Vars, L),
 	permutacoes_soma(L, [1,2,3,4,5,6,7,8,9], Soma, Perms),
 	Perm_soma = [Esp, Perms].
+
+
+% permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma)
+/* em que Perm eh uma permutacao, Esp eh um espaço, Espacos eh uma lista de
+ * espaços, e Perms_soma eh uma lista de listas tal como obtida pelo predicado
+ * anterior, significa que Perm eh uma permutação possivel para o espaço Esp */
+permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma) :-
+
+	% Encontra as permutacoes soma para os espacos em comum
+	espacos_com_posicoes_comuns(Espacos, Esp, Esp_Com),
+	permutacoes_soma_espacos(Esp_Com, Temp),
+	intersection(Perms_soma, Temp, Perms_soma_Com),
+
+	% Encontra as permutacoes para o espaco Esp
+	permutacoes_soma_espacos([Esp], [[_, Esp_Perms]]),
+
+	% Itera sobre todas as permutacoes de Esp, ate conseguir aquela que nao
+	% apresenta incompatibilidades
+	member(Perm, Esp_Perms),
+	include(eh_permutacao_impossivel(Esp, Perm, 1), Perms_soma_Com, N),
+	length(N, 0).
+
+
+% eh_permutacao_impossivel(Esp, Perm, N, Perms_soma_Com)
+eh_permutacao_impossivel(espaco(_, [Var1|_]), Perm, N, [espaco(_, Vars), Perms]) :-
+
+	% Verifica se as variaveis do espaco sao iguais
+	membro(Var1, Vars),
+
+	% Lista de permutacoes
+	append(Perms, Perms_L),
+
+	% Extrai o nesimo numero da permutacao e verifica que esta nao eh uma
+	% permutacao valida
+	nth1(N, Perm, Num), !,
+	\+ member(Num, Perms_L).
+
+
+% Itera sobre todas as variaveis do espaco
+eh_permutacao_impossivel(espaco(S1, [_|R1]), Perm, N, [espaco(S2, Vars), Perms]) :-
+	N_mais_1 is N + 1,
+	eh_permutacao_impossivel(espaco(S1, R1), Perm, N_mais_1, [espaco(S2, Vars), Perms]).
+
+
+% permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss)
+/* em que Espacos eh uma lista de espacos, Perms_soma eh uma lista de listas
+ * tal como obtida pelo predicado permutacoes_soma_espacos, e Esp eh um
+ * espaco, significa que Perms_poss eh uma lista de 2 elementos em que o
+ * primeiro eh a lista de variaveis de Esp e o segundo e a lista ordenada de
+ * permutacoes possiveis para o espaco Esp. */
+permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss) :-
+
+	% Encontra permutacose possiveis
+	bagof(Perm, permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma), Perms),
+
+	Esp = espaco(_, Vars),
+	Perms_poss = [Vars, Perms].
 
 
 % numeros_comuns(Lst_Perms, Numeros_comuns)
