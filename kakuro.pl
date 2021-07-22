@@ -218,13 +218,18 @@ eh_permutacao_impossivel(espaco(S1, [_|R1]), Perm, N, [espaco(S2, Vars), Perms])
  * espaco, significa que Perms_poss eh uma lista de 2 elementos em que o
  * primeiro eh a lista de variaveis de Esp e o segundo e a lista ordenada de
  * permutacoes possiveis para o espaco Esp. */
-permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss) :-
+permutacoes_possiveis_espaco(Espacos, Perms_soma, espaco(S, Vars), Perms_poss) :-
 
-	% Encontra permutacose possiveis
-	bagof(Perm, permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma), Perms),
+	% Encontra permutacoes possiveis
+	bagof(Perm, permutacao_possivel_espaco(Perm, espaco(S, Vars), Espacos, Perms_soma), Perms),
 
-	Esp = espaco(_, Vars),
 	Perms_poss = [Vars, Perms].
+
+
+permutacoes_possiveis_espacos(Espacos, Perms_poss_esps) :-
+	permutacoes_soma_espacos(Espacos, Perms_soma),
+
+	bagof(Perms_poss, (member(Esp, Espacos), permutacoes_possiveis_espaco(Espacos, Perms_soma, Esp, Perms_poss)), Perms_poss_esps).
 
 
 % numeros_comuns(Lst_Perms, Numeros_comuns)
@@ -240,4 +245,21 @@ numeros_comuns(Lst_Perms, Numeros_comuns) :-
 	length(Lst_Perms, N),
 	setof(Par, Aux ^
 	(member(Par, Temp), intersection(Temp, [Par], Aux), length(Aux, N)),
-	Numeros_comuns); Numeros_comuns = [].
+	Numeros_comuns), !; Numeros_comuns = [].
+
+
+% atribui_comuns(Perms_Possiveis)
+/* em que Perms_Possiveis eh uma lista de permutacoes possiveis, atualiza esta
+ * lista atribuindo a cada espaco numeros comuns a todas as permutacoes
+ * possiveis para esse espaco. */
+atribui_comuns(Perms_Possiveis) :-
+	maplist(atribui_comuns_aux, Perms_Possiveis).
+
+atribui_comuns_aux([Vars, Perms]) :-
+	numeros_comuns(Perms, Comuns),
+	atribui_comuns_aux(Vars, Comuns).
+
+atribui_comuns_aux(_, []).
+atribui_comuns_aux(Esp, [(Pos, Val) | R]) :-
+	nth1(Pos, Esp, Val),
+	atribui_comuns_aux(Esp, R).
