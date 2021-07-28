@@ -4,18 +4,17 @@
 :- [puzzles_publicos].
 
 % combinacoes_soma(N, Els, Soma, Combs)
-/* Combs eh a lista ordenada cujos elementos sao as combinacoes N a N, dos
- * elementos de Els cuja soma eh Soma. */
+/* Combs eh a lista ordenada de combinacoes N a N, dos elementos de Els cuja
+ * soma eh Soma. */
 combinacoes_soma(N, Els, Soma, Combs) :-
 	setof(Comb, (combinacao(N, Els, Comb), sum_list(Comb, Soma)), Combs).
 
 
 % permutacoes_soma(N, Els, Soma, Perms)
-/* Perms eh a lista ordenada cujos elementos sao as permutacoes das combinacoes
- * N a N, dos elementos de Els cuja soma eh Soma. */
+/* Perms eh a lista ordenada de permutacoes das combinacoes N a N, dos
+ * elementos de Els cuja soma eh Soma. */
 permutacoes_soma(N, Els, Soma, Perms) :-
 
-	% Encontra as permutacoes de cada combinacao
 	findall(Perm,
 	(combinacoes_soma(N, Els, Soma, Combs), member(Comb, Combs), permutation(Comb, Perm)),
 	Temp),
@@ -25,13 +24,11 @@ permutacoes_soma(N, Els, Soma, Perms) :-
 
 
 % espaco_fila(Fila, Esp, H_V)
-/* em que Fila eh uma fila (linha ou coluna) de um puzzle e H_V eh um dos
- * atomos h ou v, conforme se trate de uma fila horizontal ou vertical,
- * respectivamente, significa que Esp eh um espaco de Fila. */
+/* Espaco eh um espaco da fila Fila na direcao de H_V:
+ * h - horizontal
+ * v - vertical */
 espaco_fila(Fila, Esp, 'h') :-
 
-	% Iterando sobre todas as listas da fila Agrupada,
-	% cria o espaco com a lista e variaveis correspondentes
 	obtem_indices(Fila, Inds), obtem_intervalos(Inds, Ints), agrupa_fila(Fila, Fila_Ag, Ints),
 	member(M, Fila_Ag),
 	M = [Nums|Vars],
@@ -47,13 +44,13 @@ espaco_fila(Fila, Esp, 'v') :-
 
 
 % obtem_indices(Fila, Inds)
-/* Fila eh uma fila e Inds eh os indices ocupados pelas listas validas de Fila */
+/* Inds eh a lista de indices ocupados pelas listas validas de Fila */
 obtem_indices(Fila, Inds) :-
 
-	% Lista com todas as listas invalidas
+	% Listas invalidas
 	findall(M, (nextto(M, N, Fila), is_list(M), is_list(N)), Inv),
 
-	% Indices das listas validas, acrescentada com o tamanho da lista+1
+	% Indices das listas validas
 	findall(Pos, (nth1(Pos, Fila, O), is_list(O), \+member(O, Inv)), Temp),
 	length(Fila, L), L_mais_1 is L+1, append(Temp, [L_mais_1], Inds).
 
@@ -66,25 +63,21 @@ obtem_intervalos(Inds, Ints) :-
 
 obtem_intervalos_aux(Inds, Int) :-
 
-	% Itera sobre todos os indices, prefazendo pares de indices
 	length(Inds, L), L_menos_1 is L-1, between(1, L_menos_1, Ind),
 	nth1(Ind, Inds, Ind1), Ind_mais_1 is Ind+1, nth1(Ind_mais_1, Inds, Ind2),
 	Int = [Ind1, Ind2].
 
 
 % agrupa_fila(Fila, Fila_S, Ints)
-/* Fila eh uma fila, Ints eh uma lista de intervalos e Fila_S eh a fila com
- * listas agrupadas de listas e variaveis */
+/* Ints eh uma lista de intervalos e Fila_S eh a fila com listas agrupadas de
+ * listas e variaveis */
 agrupa_fila(Fila, Fila_Ag, Ints) :-
 	bagof(Fila_S, agrupa_fila_aux(Fila, Fila_S, Ints), Fila_Ag).
 
 agrupa_fila_aux(Fila, Fila_S, Ints) :-
 
-	% Itera sobre todos os pares, definindo um limite inferior e superior de indices
 	member(Par, Ints), nth1(1, Par, Inf), nth1(2, Par, Sup),
 
-	% Forma a lista com todas as variaveis entre as duas listas com indices
-	% Inf e Sup
 	bagof(M, Pos^(nth1(Pos, Fila, M), \+is_list(M), Inf < Pos, Pos < Sup), Vars),
 	nth1(Inf, Fila, Lst),
 
@@ -92,30 +85,24 @@ agrupa_fila_aux(Fila, Fila_S, Ints) :-
 
 
 % espacos_fila(H_V, Fila, Espacos)
-/* em que Fila eh uma fila (linha ou coluna) de uma grelha e H_V eh um dos
- * atomos h ou v, significa que Espacos eh a lista de todos os espacos de
- * Fila, da esquerda para a direita */
+/* Espacos eh a lista de espacos da fila Fila na direcao H_V */
 espacos_fila(H_V, Fila, Espacos) :-
 	bagof(Esp, espaco_fila(Fila, Esp, H_V), Espacos).
 
 
 % espacos_puzzle(Puzzle, Espacos)
-/* em que Puzzle eh um puzzle, significa que Espacos eh a lista de espacos de
- * Puzzle */
+/* Espacos eh a lista de espacos do puzzle Puzzle */
 espacos_puzzle(Puzzle, Espacos) :-
 
-	% Obter espacos do puzzle
 	bagof(Esps, espacos_puzzle_aux('h', Puzzle, Esps), Espacos1),
 	mat_transposta(Puzzle, Transp),
 	bagof(Esps, espacos_puzzle_aux('v', Transp, Esps), Espacos2),
 
-	% Junta os espacos numa so lista
 	append(Espacos1, Espacos2, Temp),
 	append(Temp, Espacos).
 
 espacos_puzzle_aux(H_V, Puzzle, Esps) :-
 
-	% Descobre todos os espacos do puzzle
 	member(Fila, Puzzle),
 	espacos_fila(H_V, Fila, Esps).
 
@@ -171,9 +158,9 @@ permutacoes_soma_espacos_aux(Espacos, Perm_soma) :-
 
 
 % permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma)
-/* em que Perm eh uma permutacao, Esp eh um espaço, Espacos eh uma lista de
- * espaços, e Perms_soma eh uma lista de listas tal como obtida pelo predicado
- * anterior, significa que Perm eh uma permutação possivel para o espaço Esp */
+/* em que Perm eh uma permutacao, Esp eh um espaco, Espacos eh uma lista de
+ * espacos, e Perms_soma eh uma lista de listas tal como obtida pelo predicado
+ * anterior, significa que Perm eh uma permutacao possivel para o espaco Esp */
 permutacao_possivel_espaco(Perm, Esp, Espacos, Perms_soma) :-
 
 	% Encontra as permutacoes soma para os espacos em comum
@@ -226,6 +213,7 @@ permutacoes_possiveis_espaco(Espacos, Perms_soma, espaco(S, Vars), Perms_poss) :
 	Perms_poss = [Vars, Perms].
 
 
+% permutacoes_possiveis_espaco(Espacos, Perms_poss_esps)
 permutacoes_possiveis_espacos(Espacos, Perms_poss_esps) :-
 	permutacoes_soma_espacos(Espacos, Perms_soma),
 
@@ -263,3 +251,81 @@ atribui_comuns_aux(_, []).
 atribui_comuns_aux(Esp, [(Pos, Val) | R]) :-
 	nth1(Pos, Esp, Val),
 	atribui_comuns_aux(Esp, R).
+
+
+% simplifica(Perms_Possiveis, Novas_Perms_Possiveis)
+/* em que Perms_Possiveis eh uma lista de permutacoes possiveis, significa que
+ * Novas_Perms_Possiveis eh o resultado de simplificar Perms_Possiveis. */
+simplifica(Perms_Possiveis, Novas_Perms_Possiveis) :-
+	atribui_comuns(Perms_Possiveis),
+	retira_impossiveis(Perms_Possiveis, P),
+	Perms_Possiveis \== P,
+	simplifica(P, Novas_Perms_Possiveis).
+
+simplifica(Perms_Possiveis, Novas_Perms_Possiveis) :-
+	atribui_comuns(Perms_Possiveis),
+	retira_impossiveis(Perms_Possiveis, Novas_Perms_Possiveis),
+	Perms_Possiveis == Novas_Perms_Possiveis.
+
+
+% inicializa(Puzzle, Perms_Possiveis)
+/* em que Puzzle eh um puzzle, significa que Perms_Possiveis eh a lista de
+ * permutacoes simplificada para Puzzle */
+inicializa(Puzzle, Perms_Possiveis) :-
+	espacos_puzzle(Puzzle, Espacos),
+	permutacoes_possiveis_espacos(Espacos, Perms_P),
+	simplifica(Perms_P, Perms_Possiveis).
+
+
+% escolhe_menos_alternativas(Perms_Possiveis, Escolha)
+/* Escolha eh o elemento de Perms_Possiveis com lista de permutacoes com mais
+ * que uma permutacao e menor numero de permutacoes entre as que teem mais que
+ * uma */
+escolhe_menos_alternativas(Perms_Possiveis, [Vars, Perms]) :-
+    member([Vars, Perms], Perms_Possiveis),
+    any(var, Vars),
+    all(mais_curto(Perms), Perms_Possiveis), !.
+
+menor_comprimento(Lst1, Lst2) :-
+    length(Lst1, L1), length(Lst2, L2),
+    L1 =< L2.
+
+any(Goal, [El | _]) :-
+    call(Goal, El), !.
+any(Goal, [_ | Resto]) :- any(Goal, Resto).
+
+all(_, []) :- !.
+all(Goal, [El | Resto]) :-
+    call(Goal, El),
+    all(Goal, Resto).
+
+
+% experimenta_perm(Escolha, Perms_Possiveis, Novas_Perms_Possiveis)
+/* Novas_Perms_Possiveis eh o resultado de substituir em Perms_Possiveis o
+ * espaco correspondente ao espaco de Escolha por Escolha, unificando o espaco
+ * de Escolha com uma permutacao de Escolha */
+experimenta_perm([Esp, Lst_Perms], Perms_Possiveis, Novas_Perms_Possiveis) :-
+    member(Esp, Lst_Perms),
+    append([Pre, [[Esp, Lst_Perms]], Post], Perms_Possiveis),
+    append([Pre, [[Esp, [Esp]]], Post], Novas_Perms_Possiveis).
+
+
+% resolve_aux(Perms, Novas_Perms)
+/* Novas_Perms_Possiveis eh o resultado de resolver o puzzle representado
+ por Perms_Possiveis */
+resolve_aux(Perms, Novas_Perms) :-
+    escolhe_menos_alternativas(Perms, Escolha), !,
+    experimenta_perm(Escolha, Perms, Perms_Testadas),
+    simplifica(Perms_Testadas, Perms_Simples),
+    resolve_aux(Perms_Simples, Novas_Perms).
+
+resolve_aux(Perms, Perms_Simples) :-
+    all(all(\=([])), Perms),
+    simplifica(Perms, Perms_Simples), !.
+
+
+% resolve(Puzzle)
+/* Unifica as variaveis em Puzzle de forma a inicializar e a resolver o Puzzle */
+resolve(Puzzle) :-
+	inicializa(Puzzle, Perms_Possiveis),
+	resolve_aux(Perms_Possiveis, _).
