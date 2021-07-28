@@ -282,22 +282,22 @@ inicializa(Puzzle, Perms_Possiveis) :-
  * que uma permutacao e menor numero de permutacoes entre as que teem mais que
  * uma */
 escolhe_menos_alternativas(Perms_Possiveis, [Vars, Perms]) :-
-    member([Vars, Perms], Perms_Possiveis),
-    any(var, Vars),
-    all(mais_curto(Perms), Perms_Possiveis), !.
+	member([Vars, Perms], Perms_Possiveis),
+	any(var, Vars),
+	all(mais_curto(Perms), Perms_Possiveis), !.
 
 menor_comprimento(Lst1, Lst2) :-
-    length(Lst1, L1), length(Lst2, L2),
-    L1 =< L2.
+	length(Lst1, L1), length(Lst2, L2),
+	L1 =< L2.
 
 any(Goal, [El | _]) :-
-    call(Goal, El), !.
+	call(Goal, El), !.
 any(Goal, [_ | Resto]) :- any(Goal, Resto).
 
 all(_, []) :- !.
 all(Goal, [El | Resto]) :-
-    call(Goal, El),
-    all(Goal, Resto).
+	call(Goal, El),
+	all(Goal, Resto).
 
 
 % experimenta_perm(Escolha, Perms_Possiveis, Novas_Perms_Possiveis)
@@ -305,23 +305,23 @@ all(Goal, [El | Resto]) :-
  * espaco correspondente ao espaco de Escolha por Escolha, unificando o espaco
  * de Escolha com uma permutacao de Escolha */
 experimenta_perm([Esp, Lst_Perms], Perms_Possiveis, Novas_Perms_Possiveis) :-
-    member(Esp, Lst_Perms),
-    append([Pre, [[Esp, Lst_Perms]], Post], Perms_Possiveis),
-    append([Pre, [[Esp, [Esp]]], Post], Novas_Perms_Possiveis).
+	member(Esp, Lst_Perms),
+	append([Pre, [[Esp, Lst_Perms]], Post], Perms_Possiveis),
+	append([Pre, [[Esp, [Esp]]], Post], Novas_Perms_Possiveis).
 
 
 % resolve_aux(Perms, Novas_Perms)
 /* Novas_Perms_Possiveis eh o resultado de resolver o puzzle representado
  por Perms_Possiveis */
 resolve_aux(Perms, Novas_Perms) :-
-    escolhe_menos_alternativas(Perms, Escolha), !,
-    experimenta_perm(Escolha, Perms, Perms_Testadas),
-    simplifica(Perms_Testadas, Perms_Simples),
-    resolve_aux(Perms_Simples, Novas_Perms).
+	escolhe_menos_alternativas(Perms, Escolha), !,
+	experimenta_perm(Escolha, Perms, Perms_Testadas),
+	simplifica(Perms_Testadas, Perms_Simples),
+	resolve_aux(Perms_Simples, Novas_Perms).
 
 resolve_aux(Perms, Perms_Simples) :-
-    all(all(\=([])), Perms),
-    simplifica(Perms, Perms_Simples), !.
+	all(all(\=([])), Perms),
+	simplifica(Perms, Perms_Simples), !.
 
 
 % resolve(Puzzle)
